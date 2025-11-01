@@ -4,7 +4,6 @@ import { DataContext } from "../../context/DataContext";
 
 export default function Header() {
   const { currentUser } = useContext(DataContext);
-
    return (
     <header className="bg-gradient-to-r from-indigo-50 to-pink-50 shadow-md">
       <div className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center">

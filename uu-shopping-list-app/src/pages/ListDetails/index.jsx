@@ -1,4 +1,4 @@
-import { useState, useContext } from "react"; // added useState
+import { useState, useContext } from "react"; 
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { DataContext } from "../../context/DataContext";
 import Cell from "../../components/Cell";
@@ -145,9 +145,7 @@ export default function ListDetails() {
         ← Back to Lists
       </Link>
 
-      {/* Main Card */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden">
-        {/* Header */}
         <div className="p-6 border-b flex justify-between items-center bg-gradient-to-r from-indigo-50 to-pink-50">
           {currentUser?.createdLists.includes(list._id) ? (
             <div className="flex items-center space-x-2">

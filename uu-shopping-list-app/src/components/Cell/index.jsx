@@ -7,7 +7,6 @@ export default function Cell({ itemId }) {
   const item = items.find((i) => i._id === itemId);
   if (!item) return <div>Item not found</div>;
 
-  // toggle checked state
   const handleCheck = () => {
     const updatedItems = items.map((i) =>
       i._id === itemId ? { ...i, checked: !i.checked } : i
@@ -33,7 +32,6 @@ export default function Cell({ itemId }) {
 
   return (
   <div className="flex justify-between items-center bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-    {/* Item Name */}
     <span
       className={`text-lg ${
         item.checked
@@ -44,7 +42,6 @@ export default function Cell({ itemId }) {
       {item.name}
     </span>
 
-    {/* Action Buttons */}
     <div className="flex items-center space-x-2">
       <button
         onClick={handleCheck}

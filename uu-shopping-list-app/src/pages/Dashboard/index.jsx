@@ -16,7 +16,7 @@ export default function Dashboard() {
       <h1 className="text-2xl font-bold mb-4">Your Lists</h1>
       <ul className="space-y-2">
         {userLists.map((list) => (
-          <Link to={`/list/${list._id}`}>
+          <Link key={list._id} to={`/list/${list._id}`}>
             <li key={list._id} className="p-4 border rounded hover:bg-pink-100">
               <p>{list.name}</p>
             </li>
