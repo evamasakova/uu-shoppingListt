@@ -1,33 +1,15 @@
 const mongoose = require("mongoose");
 
-const listSchema = mongoose.Schema({
+const itemSchema = mongoose.Schema({
   name: { type: String, required: true },
-  description: { type: String, required: false },
-
-  creatorId: {
+  listID: { type: mongoose.Schema.Types.ObjectId, ref: "List", required: true },
+  checked: { type: Boolean, required: true },
+  addedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
-  },
-  members: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-  ],
+  }
+}, {timestamps: true});
 
-  items: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Item",
-      required: true,
-    },
-  ],
-
-  createdAt: { type: Date, required: true },
-  updatedAt: { type: Date, required: true },
-});
-
-const List = mongoose.model("List", listschema);
-module.exports = List;
+const Item = mongoose.model("Item", itemSchema);
+module.exports = Item;

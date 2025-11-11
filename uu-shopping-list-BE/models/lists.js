@@ -11,9 +11,10 @@ const listSchema = mongoose.Schema({
   },
   members: [
     {
-      type: mongoose.Schema.Types.ObjectId,
+      userID: {type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: true},
+      role: {type: String, required: true}
     },
   ],
 
@@ -23,12 +24,9 @@ const listSchema = mongoose.Schema({
       ref: "Item",
       required: true,
     },
-  ],
-
-  createdAt: { type: Date, required: true },
-  updatedAt: { type: Date, required: true },
-}, {timestamps: true} //mongoose se automaticky postará 
+  ]
+}, {timestamps: true} //mongoose se automaticky postará o createdAt a updatedAt
 );
 
-const List = mongoose.model("List", listschema);
+const List = mongoose.model("List", listSchema);
 module.exports = List;

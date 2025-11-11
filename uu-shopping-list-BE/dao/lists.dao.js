@@ -1,12 +1,11 @@
-//create
-//get list
-//get lists
-//update
-//delete
+/**
+ * databazove operace
+ */
 
 const { default: mongoose } = require("mongoose");
 const List = require("../models/lists");
-
+const User = require("../models/users");
+const Item = require("../models/items");
 class ListDAO {
   constructor() {
     this.model = List;
@@ -35,31 +34,52 @@ class ListDAO {
       console.log(error);
     }
   }
-  async getList() {
+  async getList(listId) {
     try {
-      return await List.find().select("-__v");
+      const list = await List.findById(listId).select("-__v");
+      return list;
     } catch (error) {
       console.log(error);
     }
   }
   async getLists() {
     try {
+      return await Task.find().select("-__v");
     } catch (error) {
       console.log(error);
     }
   }
-  async removeMember() {
+  async updateList(data, listId) {
     try {
-      //owner validation
+      const updatedList = await List.findByIdAndUpdate(
+        listId,
+        { ...data, updatedAt: new Date() },
+        { new: true }
+      );
+      return updatedList;
     } catch (error) {
       console.log(error);
     }
   }
-  async leaveList() {
+  async deleteList(listId) {
     try {
-      //owner validation
+      //delete references of list for createdLists
+      await User.updateMany(
+        { createdLists: listId },
+        { $pull: { createdLists: listId } }
+      );
+      //delete references of list for memberLists
+      await User.updateMany(
+        { memberLists: listId },
+        { $pull: { memberLists: listId } }
+      );
+      await Item.deleteMany({ listID: listId });
+
+      const deletedList = await List.findByIdAndDelete(listId);
+      return deletedList;
     } catch (error) {
       console.log(error);
+      throw error;
     }
   }
 }
