@@ -1,15 +1,42 @@
 const UserListDAO = require("../dao/userList.dao");
 
-exports.showListMembers = (req, res, next) => {
-  const members = new UserListDAO().listMembers(req.params.id);
-  res.status(200).send({
-    msg: `Showing list ${req.params.id}`,
-  });
+exports.inviteMemberHandler = async (req, res, next) => {
+  try {
+    const member = await new UserListDAO().inviteMember(
+      req.body,
+      req.params.id
+    );
+    res.status(200).send({
+      msg: `Invited member`,
+      payload: member,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json({ err: err.message });
+  }
 };
 
-exports.removeMember = (req, res, next) => {
-  const member = new UserListDAO().removeMember(req.params.id, req.user.id);
-  res.status(200).send({
-    msg: `Showing list ${req.params.id}`,
-  });
+exports.leaveMemberHandler = async (req, res, next) => {
+  try {
+    const member = await new UserListDAO().leaveList(req.params.id, req.body.userId);
+    res.status(200).send({
+      msg: `Member left`,
+      payload: member,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json({ err: err.message });
+  }
+};
+exports.removeMemberHandler = (req, res, next) => {
+  try {
+    const member = new UserListDAO().removeMember(req.params.id, req.body.userId);
+    res.status(200).send({
+      msg: `Removed member`,
+      payload: member,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json({ err: err.message });
+  }
 };

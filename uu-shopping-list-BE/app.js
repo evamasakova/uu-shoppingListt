@@ -6,14 +6,14 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const mongoose = require("mongoose");
-/*mongoose
+mongoose
   .connect(process.env.MONGODBCONNECTIONSTRING)
   .then(() => console.log("Database connected"))
-  .catch((err) => console.log(err));*/
+  .catch((err) => console.log(err));
 
-//const userListRouter = require("./routes/userList");
+const userListRouter = require("./routes/userList");
 const listsRouter = require("./routes/lists");
-//const itemsRouter = require("./routes/items");
+const itemsRouter = require("./routes/items");
 
 const app = express();
 
@@ -27,9 +27,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-//app.use(`/v${process.env.APIV}/users`, userListRouter);
+app.use(`/v${process.env.APIV}/members`, userListRouter);
 app.use(`/v${process.env.APIV}/lists`, listsRouter);
-//app.use(`/v${process.env.APIV}/items`, itemsRouter);
+app.use(`/v${process.env.APIV}/items`, itemsRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

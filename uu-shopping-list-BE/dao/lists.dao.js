@@ -1,7 +1,6 @@
 /**
  * databazove operace
  */
-
 const { default: mongoose } = require("mongoose");
 const List = require("../models/lists");
 const User = require("../models/users");
@@ -13,7 +12,8 @@ class ListDAO {
 
   async createList(data) {
     try {
-      const foo = new List({
+      const list = new List({
+        archived: false,
         name: data.name,
         description: data.description,
 
@@ -26,25 +26,23 @@ class ListDAO {
         ],
 
         items: [],
-
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
       });
+      return await list.save();
     } catch (error) {
       console.log(error);
     }
   }
   async getList(listId) {
     try {
-      const list = await List.findById(listId).select("-__v");
-      return list;
+     
+      return await List.findById(listId).select("-__v");
     } catch (error) {
       console.log(error);
     }
   }
   async getLists() {
     try {
-      return await Task.find().select("-__v");
+      return await List.find().select("-__v");
     } catch (error) {
       console.log(error);
     }
@@ -53,9 +51,10 @@ class ListDAO {
     try {
       const updatedList = await List.findByIdAndUpdate(
         listId,
-        { ...data, updatedAt: new Date() },
+        data,
         { new: true }
       );
+
       return updatedList;
     } catch (error) {
       console.log(error);

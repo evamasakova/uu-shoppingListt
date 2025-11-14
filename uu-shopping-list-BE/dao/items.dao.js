@@ -16,9 +16,8 @@ class ItemDAO {
         listID: data.listID,
         checked: false,
         addedBy: data.addedBy,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
       });
+      return await foo.save();
     } catch (error) {
       console.log(error);
     }
@@ -28,7 +27,7 @@ class ItemDAO {
     try {
       return await Item.findByIdAndUpdate(
         itemId,
-        { checked: false },
+        { checked: true },
         { new: true }
       );
     } catch (error) {
@@ -40,7 +39,7 @@ class ItemDAO {
     try {
       return await Item.findByIdAndUpdate(
         itemId,
-        { checked: true },
+        { checked: false },
         { new: false }
       );
     } catch (error) {
