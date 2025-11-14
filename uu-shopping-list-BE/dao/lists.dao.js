@@ -81,5 +81,12 @@ class ListDAO {
       throw error;
     }
   }
+  async getMembers(id) {
+    try {
+      return await List.findById(id).select("members");
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }
 module.exports = ListDAO;

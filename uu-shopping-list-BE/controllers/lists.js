@@ -61,3 +61,17 @@ exports.updateListHandler = (req, res, next) => {
     return res.status(400).json({ err: err.message });
   }
 };
+
+
+exports.getMembersHandler = async (req, res, next) => {
+  try {
+    const data = await new ListDAO().getMembers(req.params.id);
+    res.status(200).send({
+      msg: `got members!`,
+      payload: data,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json({ err: err.message });
+  }
+};
