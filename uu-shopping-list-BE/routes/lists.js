@@ -31,7 +31,7 @@ router.get("/", getListsHandler); // any user, as long as they own at least one 
 router.put("/:id", updateListValidator, validateInput, updateListHandler); // list-level update -> owners privilege, (changing names, removing members,...)
 router.delete("/:id", /*auth,*/ deleteListValidator, validateInput, deleteListHandler); //owner privileges
 //potom .populate na jmena uzivatelu
-router.get("/get-members/:id", getMembersValidator, validateInput, getMembersHandler)
+router.get("/members/:id", getMembersValidator, validateInput, getMembersHandler)
 //router.get("/:id", authMultiRole(["admin", "owner"]), exampleMultiRoleHandler)
 
 
