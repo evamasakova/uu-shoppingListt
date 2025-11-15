@@ -24,12 +24,7 @@ const {
   deleteListHandler,
   getMembersHandler,
   getArchivedListsHandler,
-  // exampleMultiRoleHandler,
 } = require("../controllers/lists");
-/*
-const auth = require("../middleware/authOwnerList");
-const authMultiRole = require("../middleware/authMultiRole");
-*/
 
 router.post(
   "/create",
@@ -38,19 +33,47 @@ router.post(
   validateInput,
   createListHandler
 ); //create list (any user)
-router.get("/find/:id", getListValidator, validateInput, getListHandler); //any user who is a member of or is an owner of that list
-router.get("/all", getListsHandler); // any user, as long as they own at least one or are a part of at least one
-router.get("/archived", getArchivedListsHandler); // any user, as long as they own at least one or are a part of at least one
-router.put("/update/:id", updateListValidator, validateInput, updateListHandler); // list-level update -> owners privilege, (changing names, removing members,...)
+router.get(
+  "/find/:id",
+  verifyToken,
+  loadListAndRole,
+  requireMemberOrOwner,
+  getListValidator,
+  validateInput,
+  getListHandler
+); //any user who is a member of or is an owner of that list
+router.get("/all", verifyToken, getListsHandler); // any user, as long as they own at least one or are a part of at least one
+router.get(
+  "/archived",
+  verifyToken,
+  loadListAndRole,
+  requireOwner,
+  getArchivedListsHandler
+); // owners
+router.put(
+  "/update/:id",
+  verifyToken,
+  loadListAndRole,
+  requireOwner,
+  updateListValidator,
+  validateInput,
+  updateListHandler
+); // list-level update -> owners privilege, (changing names, removing members,...)
 router.delete(
   "/delete/:id",
-  /*auth,*/ deleteListValidator,
+  verifyToken,
+  loadListAndRole,
+  requireOwner,
+  deleteListValidator,
   validateInput,
   deleteListHandler
 ); //owner privileges
 //potom .populate na jmena uzivatelu
 router.get(
   "/members/:id",
+  verifyToken,
+  loadListAndRole,
+  requireMemberOrOwner,
   getMembersValidator,
   validateInput,
   getMembersHandler
