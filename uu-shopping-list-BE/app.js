@@ -1,10 +1,10 @@
 require("dotenv").config();
-console.log("API Version:", process.env.APIV);
 const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
+const cors = require("cors");
 const mongoose = require("mongoose");
 mongoose
   .connect(process.env.MONGODBCONNECTIONSTRING)
@@ -16,18 +16,20 @@ const listsRouter = require("./routes/lists");
 const itemsRouter = require("./routes/items");
 
 const app = express();
-
+const PORT = process.env.PORT || 3000;
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
 
+app.use(cors()); //app bude pouzivat cors
+app.use(cookieParser()); //app bude umet brat cookies
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use(`/v${process.env.APIV}/members`, userListRouter);
+app.use(`/v${process.env.APIV}/users`, userListRouter);
 app.use(`/v${process.env.APIV}/lists`, listsRouter);
 app.use(`/v${process.env.APIV}/items`, itemsRouter);
 

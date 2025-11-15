@@ -34,7 +34,6 @@ class ListDAO {
   }
   async getList(listId) {
     try {
-     
       return await List.findById(listId).select("-__v");
     } catch (error) {
       console.log(error);
@@ -49,17 +48,36 @@ class ListDAO {
   }
   async updateList(data, listId) {
     try {
-      const updatedList = await List.findByIdAndUpdate(
-        listId,
-        data,
-        { new: true }
-      );
+      const updatedList = await List.findByIdAndUpdate(listId, data, {
+        new: true,
+      });
 
       return updatedList;
     } catch (error) {
       console.log(error);
     }
   }
+
+  async getArchivedLists(archived) {
+    try {
+      return await List.find({ archived: true }).select("-__v");
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async updateList(data, listId) {
+    try {
+      const updatedList = await List.findByIdAndUpdate(listId, data, {
+        new: true,
+      });
+
+      return updatedList;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   async deleteList(listId) {
     try {
       //delete references of list for createdLists

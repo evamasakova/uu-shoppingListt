@@ -17,26 +17,7 @@ class UserListDAO {
     }
   }
 
-  /*
-  async inviteMember(data, listID) {
-    try {
-      //invite member pres email
-      const invitedUser = await User.findOne(data);
-      const list = await List.findById(listID);
-      list.members.push({
-        userId: invitedUser._id,
-        role: "member",
-      });
-      const updatedList = await list.save();
-      await User.findByIdAndUpdate(invitedUser._id, {
-        $addToSet: { memberLists: list.id },
-      });
-      return updatedList;
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
-  }*/
+  
   async inviteMember(data, listId) {
     try {
       const { id } = data;

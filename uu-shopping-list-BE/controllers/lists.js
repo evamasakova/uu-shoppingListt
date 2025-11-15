@@ -25,6 +25,18 @@ exports.getListsHandler = async (req, res, next) => {
     return res.status(400).json({ err: err.message });
   }
 };
+exports.getArchivedListsHandler = async (req, res, next) => {
+  try {
+    const data = await new ListDAO().getArchivedLists(req.body.archived);
+    res.status(200).send({
+      msg: `got archived lists!`,
+      payload: data,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json({ err: err.message });
+  }
+};
 
 exports.getListHandler = async (req, res, next) => {
   try {
