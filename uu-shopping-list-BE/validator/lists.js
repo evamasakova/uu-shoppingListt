@@ -51,20 +51,7 @@ exports.createListValidator = [
 exports.getListValidator = [
   param("id").isMongoId().withMessage("Invalid list ID"),
 ];
-/*
-exports.createListValidator = [
-  body("name")
-    .trim()
-    .notEmpty()
-    .withMessage("List name is required")
-    .isLength({ max: 100 })
-    .withMessage("Name must be under 100 characters"),
 
-  body("description")
-    .optional()
-    .isLength({ max: 500 })
-    .withMessage("Description must be under 500 characters"),
-];*/
 
 exports.updateListValidator = [
   param("id").isMongoId().withMessage("Invalid list ID"),

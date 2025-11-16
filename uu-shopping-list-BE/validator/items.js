@@ -14,11 +14,7 @@ exports.addItemValidator = [
     .isMongoId()
     .withMessage("Invalid listID format"),
   body("checked").isBoolean().withMessage("Must be a boolean true or false"),
-  /*body("addedBy")
-    .exists()
-    .withMessage("AddedBy ID is required")
-    .isMongoId()
-    .withMessage("Invalid AddedBy format"),*/
+  
 ];
 
 exports.checkItemValidator = [

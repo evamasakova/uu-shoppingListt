@@ -92,20 +92,95 @@ export const DataProvider = ({ children }) => {
     },
   ]);
 
-  return (
-    <DataContext.Provider
-      value={{
-        users,
-        shoppingLists,
-        items,
-        currentUser,
-        setUsers,
-        setShoppingLists,
-        setItems,
-        setCurrentUser,
-      }}
-    >
-      {children}
-    </DataContext.Provider>
-  );
+  // simple id generator
+  const genId = (prefix = "id") =>
+    `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+  // create a new shopping list and make current user creator + member
+  const createList = ({ name, description = "" }) => {
+    const id = genId("l");
+    const newList = {
+      _id: id,
+      name,
+      description,
+      creatorId: currentUser._id,
+      members: [{ userId: currentUser._id }],
+      items: [],
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    setShoppingLists((prev) => [newList, ...prev]);
+
+    setUsers((prev) =>
+      prev.map((u) =>
+        u._id === currentUser._id
+          ? {
+              ...u,
+              createdLists: [...(u.createdLists || []), id],
+              memberLists: [...new Set([...(u.memberLists || []), id])],
+            }
+          : u
+      )
+    );
+
+    setCurrentUser((prev) => ({
+      ...prev,
+      createdLists: [...(prev.createdLists || []), id],
+      memberLists: [...new Set([...(prev.memberLists || []), id])],
+    }));
+
+    return id;
+  };
+
+  // delete a shopping list only if current user is the creator
+  const deleteList = (listId) => {
+    const list = shoppingLists.find((l) => l._id === listId);
+    if (!list) return false;
+    if (list.creatorId !== currentUser._id) return false;
+
+    // remove list
+    setShoppingLists((prev) => prev.filter((l) => l._id !== listId));
+
+    // remove related items
+    setItems((prev) => prev.filter((it) => it.listId !== listId));
+
+    // remove references from users
+    setUsers((prev) =>
+      prev.map((u) => ({
+        ...u,
+        createdLists: (u.createdLists || []).filter((id) => id !== listId),
+        memberLists: (u.memberLists || []).filter((id) => id !== listId),
+      }))
+    );
+
+    // update currentUser
+    setCurrentUser((prev) => ({
+      ...prev,
+      createdLists: (prev.createdLists || []).filter((id) => id !== listId),
+      memberLists: (prev.memberLists || []).filter((id) => id !== listId),
+    }));
+
+    return true;
+  };
+
+   return (
+     <DataContext.Provider
+       value={{
+         users,
+         shoppingLists,
+         items,
+         currentUser,
+         setUsers,
+         setShoppingLists,
+         setItems,
+         setCurrentUser,
+        createList,
+        deleteList,
+       }}
+     >
+       {children}
+     </DataContext.Provider>
+   );
 };
