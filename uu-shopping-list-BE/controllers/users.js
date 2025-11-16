@@ -1,5 +1,5 @@
-const UserDAO = require("../dao/users");
-const { genSalt, hash } = require("bcryptjs");
+const UserDAO = require("../dao/users.dao");
+const { genSalt, hash, compare } = require("bcrypt");
 
 exports.createUserHandler = async (req, res) => {
   try {
@@ -25,8 +25,7 @@ exports.createUserHandler = async (req, res) => {
     if (!createdUser) {
       return res.status(500).json({ msg: "Something went wrong!" });
     }
-    // assign  a role
-    //await createdUser.addUserRole("user");
+
     res.status(201).json({
       msg: "User created",
       payload: createdUser,

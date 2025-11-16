@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const {
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireOwner,
   requireMemberOrOwner,
   requireMember,
@@ -26,17 +27,11 @@ const {
   getArchivedListsHandler,
 } = require("../controllers/lists");
 
-router.post(
-  "/create",
-  verifyToken,
-  createListValidator,
-  validateInput,
-  createListHandler
-); //create list (any user)
 router.get(
   "/find/:id",
   verifyToken,
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireMemberOrOwner,
   getListValidator,
   validateInput,
@@ -46,14 +41,39 @@ router.get("/all", verifyToken, getListsHandler); // any user, as long as they o
 router.get(
   "/archived",
   verifyToken,
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireOwner,
   getArchivedListsHandler
 ); // owners
+
+/**
+ *
+ * URL: /members/:id
+ * Method: GET
+ */
+router.get(
+  "/members/:id",
+  verifyToken,
+  loadList,
+  attachUserRole,
+  requireMemberOrOwner,
+  getMembersValidator,
+  validateInput,
+  getMembersHandler
+);
+router.post(
+  "/create-list",
+  verifyToken,
+  createListValidator,
+  validateInput,
+  createListHandler
+); //create list (any user)
 router.put(
   "/update/:id",
   verifyToken,
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireOwner,
   updateListValidator,
   validateInput,
@@ -62,22 +82,12 @@ router.put(
 router.delete(
   "/delete/:id",
   verifyToken,
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireOwner,
   deleteListValidator,
   validateInput,
   deleteListHandler
 ); //owner privileges
-//potom .populate na jmena uzivatelu
-router.get(
-  "/members/:id",
-  verifyToken,
-  loadListAndRole,
-  requireMemberOrOwner,
-  getMembersValidator,
-  validateInput,
-  getMembersHandler
-);
-//router.get("/:id", authMultiRole(["admin", "owner"]), exampleMultiRoleHandler)
 
 module.exports = router;

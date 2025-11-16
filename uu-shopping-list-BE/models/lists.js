@@ -24,9 +24,12 @@ const listSchema = mongoose.Schema(
     ],
     items: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Item",
-        required: true,
+       _id:false,
+        itemId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Item",
+          required: true,
+        },
       },
     ],
   },

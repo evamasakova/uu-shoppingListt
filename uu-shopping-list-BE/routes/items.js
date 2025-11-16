@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router({ mergeParams: true });
 const { verifyToken } = require("../middleware/authMiddleware");
 const {
-  loadListAndRole,
+  attachUserRole,
+  loadList,
   requireOwner,
   requireMemberOrOwner,
 } = require("../middleware/listRoles");
@@ -11,6 +12,7 @@ const {
   checkItemValidator,
   uncheckItemValidator,
   deleteItemValidator,
+  viewItemsValidator,
 } = require("../validator/items");
 const validateInput = require("../middleware/validateInput");
 
@@ -19,12 +21,21 @@ const {
   checkItemHandler,
   uncheckItemHandler,
   deleteItemHandler,
+  viewItemsHandler,
 } = require("../controllers/items");
-
-router.post(
-  "/add",
+router.get(
+  "/all/:id",
   verifyToken,
-  loadListAndRole,
+  loadList,
+  attachUserRole,
+  requireMemberOrOwner,
+  viewItemsHandler
+);
+router.post(
+  "/add/:id",
+  verifyToken,
+  loadList,
+  attachUserRole,
   requireMemberOrOwner,
   addItemValidator,
   validateInput,
@@ -33,7 +44,8 @@ router.post(
 router.put(
   "/check/:id",
   verifyToken,
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireMemberOrOwner,
   checkItemValidator,
   validateInput,
@@ -42,7 +54,8 @@ router.put(
 router.put(
   "/uncheck/:id",
   verifyToken,
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireMemberOrOwner,
   uncheckItemValidator,
   validateInput,
@@ -51,7 +64,8 @@ router.put(
 router.delete(
   "/delete/:id",
   verifyToken,
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireMemberOrOwner,
   deleteItemValidator,
   validateInput,

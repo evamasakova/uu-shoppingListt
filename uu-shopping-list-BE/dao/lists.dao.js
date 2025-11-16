@@ -10,17 +10,17 @@ class ListDAO {
     this.model = List;
   }
 
-  async createList(data) {
+  async createList(data, userID) {
     try {
       const list = new List({
         archived: false,
         name: data.name,
         description: data.description,
 
-        creatorId: data.creatorId,
+        creatorId: userID,
         members: [
           {
-            userId: data.creatorId,
+            userId: userID,
             role: "owner",
           },
         ],
@@ -32,16 +32,26 @@ class ListDAO {
       console.log(error);
     }
   }
-  async getList(listId) {
+  async getList(listId, userID) {
     try {
-      return await List.findById(listId).select("-__v");
+      return await List.findOne({
+        _id: listId,
+        $or: [{ creatorId: userID }, { "members.userId": userID }],
+      }).select("-__v");
     } catch (error) {
       console.log(error);
     }
   }
-  async getLists() {
+
+  async getLists(userID) {
     try {
-      return await List.find().select("-__v");
+      return await List.find({
+        archived: false,
+        $or: [{ creatorId: userID }, { "members.userId": userID }],
+      })
+        .populate("creatorId", "name email")
+        .populate("members.userId", "name email")
+        .select("-__v");
     } catch (error) {
       console.log(error);
     }
@@ -58,9 +68,15 @@ class ListDAO {
     }
   }
 
-  async getArchivedLists(archived) {
+  async getArchivedLists(userID) {
     try {
-      return await List.find({ archived: true }).select("-__v");
+      return await List.find({
+        archived: true,
+        $or: [{ creatorId: userID }, { "members.userId": userID }],
+      })
+        .populate("creatorId", "name email")
+        .populate("members.userId", "name email")
+        .select("-__v");
     } catch (error) {
       console.log(error);
     }

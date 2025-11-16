@@ -8,17 +8,17 @@ exports.addItemValidator = [
     .withMessage("List name is required")
     .isLength({ max: 100 })
     .withMessage("Name must be under 100 characters"),
-  body("listID")
+  param("id")
     .exists()
     .withMessage("List ID is required")
     .isMongoId()
     .withMessage("Invalid listID format"),
   body("checked").isBoolean().withMessage("Must be a boolean true or false"),
-  body("addedBy")
+  /*body("addedBy")
     .exists()
     .withMessage("AddedBy ID is required")
     .isMongoId()
-    .withMessage("Invalid AddedBy format"),
+    .withMessage("Invalid AddedBy format"),*/
 ];
 
 exports.checkItemValidator = [

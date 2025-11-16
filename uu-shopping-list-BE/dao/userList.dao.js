@@ -17,21 +17,41 @@ class UserListDAO {
     }
   }
 
-  
-  async inviteMember(data, listId) {
+  /**
+   * TODO: dodelat populate u memberu
+   * @param {*} data
+   * @param {*} listId
+   * @returns
+   */
+  async inviteMember(userID, listId) {
     try {
-      const { id } = data;
-      const user = await User.findOne({ id });
+      const user = await User.findById(userID).select("email _id");
       const list = await List.findById(listId);
+      const alreadyMember = list.members.some(
+        (m) => m.userId.toString() === user._id.toString()
+      );
+      if (alreadyMember) {
+        return {
+          message: "User is already a member of this list",
+          listId: list._id,
+          userId: user._id,
+          email: user.email,
+        };
+      }
+
       const newMember = {
         userId: user._id,
         role: "member",
       };
+
       list.members.push(newMember);
       await list.save();
+
       return {
         listId: list._id,
-        ...newMember,
+        userId: user._id,
+        email: user.email,
+        role: "member",
       };
     } catch (error) {
       console.error(error);
@@ -43,7 +63,7 @@ class UserListDAO {
     try {
       const updatedList = await List.findByIdAndUpdate(
         listId,
-        { $pull: { members: { userID: userId } } },
+        { $pull: { members: { userId: userId } } },
         { new: true }
       );
       return updatedList;
@@ -55,11 +75,9 @@ class UserListDAO {
 
   async leaveList(listId, userId) {
     try {
-      console.log("leaveList called with:", listId, userId);
-
       const updatedList = await List.findByIdAndUpdate(
         listId,
-        { $pull: { members: { userId: userId } } }, // <-- ONLY the userId
+        { $pull: { members: { userId: userId } } },
         { new: true }
       );
 

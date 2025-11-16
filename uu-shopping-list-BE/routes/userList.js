@@ -6,7 +6,8 @@ const { login } = require("../middleware/authMiddleware");
 const { verifyToken } = require("../middleware/authMiddleware");
 
 const {
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireOwner,
   requireMemberOrOwner,
   requireMember,
@@ -30,7 +31,8 @@ const { createUserValidator } = require("../validator/users");
 router.post(
   "/members/invite/:id",
   verifyToken,
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireOwner,
   inviteMemberValidator,
   validateInput,
@@ -39,7 +41,8 @@ router.post(
 router.put(
   "/members/leave/:id",
   verifyToken,
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireMember,
   leaveMemberValidator,
   validateInput,
@@ -48,7 +51,8 @@ router.put(
 router.delete(
   "/members/remove/:id",
   verifyToken,
-  loadListAndRole,
+  loadList,
+  attachUserRole,
   requireOwner,
   removeMemberValidator,
   validateInput,
@@ -63,6 +67,7 @@ router.post(
   validateInput,
   createUserHandler
 );
+
 router.post("/login", login, loginUserHandler);
 
 module.exports = router;

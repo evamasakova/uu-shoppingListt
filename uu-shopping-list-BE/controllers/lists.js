@@ -3,7 +3,7 @@ const ListDAO = require("../dao/lists.dao");
 
 exports.createListHandler = (req, res, next) => {
   try {
-    new ListDAO().createList(req.body);
+    new ListDAO().createList(req.body, req.user.id);
     res.status(200).send({
       msg: `created list!`,
     });
@@ -15,7 +15,7 @@ exports.createListHandler = (req, res, next) => {
 
 exports.getListsHandler = async (req, res, next) => {
   try {
-    const data = await new ListDAO().getLists();
+    const data = await new ListDAO().getLists(req.user.id);
     res.status(200).send({
       msg: `got lists!`,
       payload: data,
@@ -27,7 +27,7 @@ exports.getListsHandler = async (req, res, next) => {
 };
 exports.getArchivedListsHandler = async (req, res, next) => {
   try {
-    const data = await new ListDAO().getArchivedLists(req.body.archived);
+    const data = await new ListDAO().getArchivedLists(req.user.id);
     res.status(200).send({
       msg: `got archived lists!`,
       payload: data,
@@ -40,7 +40,7 @@ exports.getArchivedListsHandler = async (req, res, next) => {
 
 exports.getListHandler = async (req, res, next) => {
   try {
-    const data = await new ListDAO().getList(req.params.id);
+    const data = await new ListDAO().getList(req.params.id, req.user.id);
     res.status(200).send({
       msg: `got list!`,
       payload: data,
@@ -62,18 +62,18 @@ exports.deleteListHandler = (req, res, next) => {
     return res.status(400).json({ err: err.message });
   }
 };
-exports.updateListHandler = (req, res, next) => {
+exports.updateListHandler = async (req, res, next) => {
   try {
-    new ListDAO().updateList(req.body,req.params.id);
+    const data = await new ListDAO().updateList(req.body, req.params.id);
     res.status(200).send({
       msg: `List updated`,
+      payload: data,
     });
   } catch (err) {
     console.error(err);
     return res.status(400).json({ err: err.message });
   }
 };
-
 
 exports.getMembersHandler = async (req, res, next) => {
   try {
