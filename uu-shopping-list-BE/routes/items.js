@@ -23,6 +23,7 @@ const {
   deleteItemHandler,
   viewItemsHandler,
 } = require("../controllers/items");
+
 router.get(
   "/all/:id",
   verifyToken,
