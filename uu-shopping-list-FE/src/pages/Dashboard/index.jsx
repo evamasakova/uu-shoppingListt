@@ -1,35 +1,103 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { DataContext } from "../../context/DataContext";
 import { Link } from "react-router-dom";
 import { CiTrash } from "react-icons/ci";
 import { CiCirclePlus } from "react-icons/ci";
 
+import {
+  loadLists as loadListsService,
+  createList as createListService,
+  updateList as updateListService,
+  deleteList as deleteListService,
+} from "../../context/listsService";
+
 export default function Dashboard() {
-  const {
-    shoppingLists,
-    currentUser,
-    createList,
-    deleteList,
-    setShoppingLists,
-  } = useContext(DataContext);
+  const { currentUser, setCurrentUser } = useContext(DataContext);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    if (!currentUser.id) {
+      setCurrentUser((prev) => ({ ...prev, id: prev.id }));
+    }
+  }, [currentUser]);
+
+  const userId = currentUser?.id;
+
+  const [shoppingLists, setShoppingLists] = useState([]);
   const [showArchived, setShowArchived] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
 
-  const archiveList = (listId) => {
-    setShoppingLists((prev) =>
-      prev.map((l) =>
-        l._id === listId ? { ...l, archived: true, updatedAt: new Date() } : l
-      )
+  const normalizeLists = (arr = []) =>
+    (arr || []).map((l) => ({
+      ...l,
+      id: l.id ,
+    members: (l.members || []).map((m) => ({ ...m, id: m.id })),
+    }));
+
+  useEffect(() => {
+    (async () => {
+      const res = await loadListsService();
+      if (res?.status >= 200 && res?.status < 300 && Array.isArray(res.payload)) {
+        setShoppingLists(normalizeLists(res.payload));
+      } else {
+        // fallback: keep any existing lists but normalize them
+        setShoppingLists((prev) => normalizeLists(prev));
+      }
+    })();
+  }, []);
+
+  const archiveList = async (listId, nextArchivedState) => {
+    await updateListService(
+      {
+        archived: Boolean(nextArchivedState),
+        updatedAt: new Date().toISOString(),
+      },
+      listId,
+      setShoppingLists
     );
   };
 
-  const userLists = shoppingLists.filter(
-    (list) =>
-      (list.creatorId === currentUser._id ||
-        list.members.some((m) => m.userId === currentUser._id)) &&
-      (showArchived ? true : !Boolean(list.archived))
-  );
+  const handleCreateList = async ({ name }) => {
+    if (!name?.trim()) return;
+
+    const res = await createListService({ name: name.trim(), description: "" }, currentUser);
+
+    if (res?.status >= 200 && res?.status < 300 && res.payload) {
+      const created = { ...res.payload, id: res.payload.id  };
+
+      setShoppingLists((prev) => [created, ...(prev || [])]);
+
+      setCurrentUser((prev) => {
+        const newId = created.id;
+        return {
+          ...prev,
+          id: prev.id ,
+          createdLists: [...(prev.createdLists || []), newId],
+          memberLists: [...new Set([...(prev.memberLists || []), newId])],
+        };
+      });
+    } else {
+      console.warn("createList failed", res);
+    }
+  };
+
+  const handleDelete = async (listId) => {
+    if (!window.confirm("Opravdu smazat tento seznam?")) return;
+    await deleteListService(listId, { setShoppingLists, setCurrentUser });
+  };
+
+  const userLists = (shoppingLists || []).filter((list) => {
+    const isCreator = list.creatorId === userId;
+    const isMember =
+      Array.isArray(list.members) && list.members.some((m) => m.userId === userId);
+
+    const visible =
+      !Boolean(list.archived) ||
+      (Boolean(list.archived) && showArchived && isCreator);
+
+    return (isCreator || isMember) && visible;
+  });
 
   return (
     <div className="max-w-4xl mx-auto mt-8 px-4">
@@ -62,7 +130,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {userLists.map((list) => (
-          <Link key={list._id} to={`/list/${list._id}`} className="group">
+          <Link key={list.id} to={`/list/${list.id}`} className="group">
             <article className="bg-white border border-transparent hover:border-indigo-100 rounded-xl p-4 shadow-md hover:shadow-lg transition transform hover:-translate-y-1 h-full flex flex-col justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-800 group-hover:text-indigo-600">
@@ -88,34 +156,34 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                {list.creatorId === currentUser._id ? (
+                {list.creatorId === userId ? (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (
-                          window.confirm("Opravdu archivovat tento seznam?")
-                        ) {
-                          archiveList(list._id);
+                        const nextArchived = !Boolean(list.archived);
+                        const confirmMsg = nextArchived
+                          ? "Opravdu archivovat tento seznam?"
+                          : "Opravdu znovu aktivovat tento seznam?";
+                        if (window.confirm(confirmMsg)) {
+                          archiveList(list.id, nextArchived);
                         }
                       }}
                       type="button"
                       className="inline-flex items-center justify-center h-8 px-3 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-sm transition"
-                      aria-label="Archivovat seznam"
+                      aria-label={
+                        list.archived ? "Aktivovat seznam" : "Archivovat seznam"
+                      }
                     >
-                      Archivovat
+                      {list.archived ? "Aktivovat" : "Archivovat"}
                     </button>
 
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (window.confirm("Opravdu smazat tento seznam?")) {
-                          const ok = deleteList(list._id);
-                          if (!ok)
-                            alert("Nemáte oprávnění smazat tento seznam.");
-                        }
+                        handleDelete(list.id);
                       }}
                       type="button"
                       className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-red-50 hover:bg-red-100 text-red-600 transition"
@@ -171,29 +239,16 @@ export default function Dashboard() {
                 Zrušit
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (!newName.trim()) return alert("Zadejte název.");
-                  createList({ name: newName.trim() });
+                  await handleCreateList({ name: newName });
                   setNewName("");
                   setIsModalOpen(false);
                 }}
                 type="button"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg shadow hover:from-indigo-600 hover:to-indigo-700"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
+                <CiCirclePlus />
                 Vytvořit
               </button>
             </div>
