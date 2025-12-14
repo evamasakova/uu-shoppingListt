@@ -1,6 +1,3 @@
-const port = import.meta.env.VITE_PORT || 3000;
-const baseUrl = `http://localhost:${port}`;
-
 const parseJsonSafe = async (res) => {
   try {
     return await res.json();
@@ -14,105 +11,40 @@ const makeResponse = (res, data) => ({
   msg: data?.msg ?? null,
   errors: data?.errors ?? null,
 });
-/**
- *  Creates a new shopping list
- * @param {*} formData
- * @returns created list response
- */
 
 export const fetchLists = async () => {
-  try {
-    const req = await fetch(`${baseUrl}/shoppingLists`, {
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      method: "GET",
-    });
-
-    const data = await parseJsonSafe(req);
-    return makeResponse(req, data);
-  } catch (err) {
-    return {
-      status: 0,
-      payload: null,
-      msg: null,
-      errors: [err.message],
-    };
-  }
+  const res = await fetch("/shoppingLists", {
+    headers: { Accept: "application/json" },
+  });
+  const data = await parseJsonSafe(res);
+  return makeResponse(res, data);
 };
+
 export const createList = async (formData) => {
-  try {
-    const req = await fetch(`${baseUrl}/shoppingLists`, {
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-      body: JSON.stringify(formData),
-    });
-
-    const data = await parseJsonSafe(req);
-    return makeResponse(req, data);
-  } catch (err) {
-    return {
-      status: 0,
-      payload: null,
-      msg: null,
-      errors: [err.message],
-    };
-  }
+  const res = await fetch("/shoppingLists", {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify(formData),
+  });
+  const data = await parseJsonSafe(res);
+  return makeResponse(res, data);
 };
-export const updateList = async (formData, listID) => {
-  try {
-    const req = await fetch(
-      `${baseUrl}/shoppingLists/${encodeURIComponent(listID)}`,
-      {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        method: "PATCH",
-        body: JSON.stringify(formData),
-      }
-    );
 
-    const data = await parseJsonSafe(req);
-    return makeResponse(req, data);
-  } catch (err) {
-    return {
-      status: 0,
-      payload: null,
-      msg: null,
-      errors: [err.message],
-    };
-  }
+export const updateList = async (formData, listId) => {
+  const res = await fetch(`/shoppingLists/${listId}`, {
+    method: "PATCH",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify(formData),
+  });
+  const data = await parseJsonSafe(res);
+  return makeResponse(res, data);
 };
-/**
- * Deletes a shopping list by ID
- * @param {*} listID
- * @returns
- */
-export const deleteList = async (listID) => {
-  try {
-    const req = await fetch(
-      `${baseUrl}/shoppingLists/${encodeURIComponent(listID)}`,
-      {
-        headers: {
-          Accept: "application/json",
-        },
-        method: "DELETE",
-      }
-    );
 
-    const data = await parseJsonSafe(req);
-    return makeResponse(req, data);
-  } catch (err) {
-    return {
-      status: 0,
-      payload: null,
-      msg: null,
-      errors: [err.message],
-    };
-  }
+export const deleteList = async (listId) => {
+  const res = await fetch(`/shoppingLists/${listId}`, {
+    method: "DELETE",
+    headers: { Accept: "application/json" },
+  });
+  const data = await parseJsonSafe(res);
+  return makeResponse(res, data);
 };

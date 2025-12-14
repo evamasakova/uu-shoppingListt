@@ -5,134 +5,145 @@ import {
   deleteList as apiDeleteList,
 } from "../models/lists";
 
-const getIdFromPayload = (p) => p?.id ;
+const getIdFromPayload = (p) => p?.id;
+const getUserId = (user) => user?.id;
 
-const getUserId = (user) => user?.id ;
+const isSuccess = (res) => res?.status >= 200 && res?.status < 300;
 
+// Load all shopping lists
 export const loadLists = async (setShoppingLists) => {
-  const res = await apiFetchLists();
-  if (res.status >= 200 && res.status < 300 && Array.isArray(res.payload)) {
-    if (typeof setShoppingLists === "function") setShoppingLists(res.payload);
+  try {
+    const res = await apiFetchLists();
+    if (isSuccess(res) && Array.isArray(res.payload) && typeof setShoppingLists === "function") {
+      setShoppingLists(res.payload);
+    }
+    return res;
+  } catch (e) {
+    console.warn("Failed to load lists", e);
+    return { status: 500, error: e };
   }
-  return res;
 };
 
+// Create a new list
 export const createList = async (
   { name, description = "" },
   currentUser,
   { setShoppingLists, setUsers, setCurrentUser } = {}
 ) => {
-  const payload = {
-    name,
-    description,
-    creatorId: getUserId(currentUser),
-    members: [{ userId: getUserId(currentUser) }],
-    items: [],
-    archived: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  const res = await apiCreateList(payload);
-  if (res.status >= 200 && res.status < 300 && res.payload) {
-    const normalized = {
-      ...res.payload,
-      id: res.payload.id ,
-      creatorId: res.payload.creatorId ?? payload.creatorId,
+  try {
+    const payload = {
+      name,
+      description,
+      creatorId: getUserId(currentUser),
+      members: [{ userId: getUserId(currentUser) }],
+      items: [],
+      archived: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
-    const newId = getIdFromPayload(normalized);
+    const res = await apiCreateList(payload);
 
-    if (typeof setShoppingLists === "function")
-      setShoppingLists((prev) => [normalized, ...(prev || [])]);
+    if (isSuccess(res) && res.payload) {
+      const normalized = {
+        ...res.payload,
+        id: getIdFromPayload(res.payload),
+        creatorId: res.payload.creatorId ?? payload.creatorId,
+      };
 
-    if (typeof setUsers === "function") {
-      setUsers((prev) =>
-        prev.map((u) =>
-          (u.id ) === getUserId(currentUser)
-            ? {
-                ...u,
-                createdLists: [...(u.createdLists || []), newId],
-                memberLists: [...(u.memberLists || []), newId],
-              }
-            : u
-        )
+      const newId = getIdFromPayload(normalized);
+
+      if (typeof setShoppingLists === "function") {
+        setShoppingLists((prev) => [normalized, ...(prev || [])]);
+      }
+
+      if (typeof setUsers === "function") {
+        setUsers((prev) =>
+          (prev || []).map((u) =>
+            u.id === getUserId(currentUser)
+              ? {
+                  ...u,
+                  createdLists: [...(u.createdLists || []), newId],
+                  memberLists: [...(u.memberLists || []), newId],
+                }
+              : u
+          )
+        );
+      }
+
+      if (typeof setCurrentUser === "function") {
+        setCurrentUser((prev) => ({
+          ...prev,
+          createdLists: [...(prev.createdLists || []), newId],
+          memberLists: [...new Set([...(prev.memberLists || []), newId])],
+        }));
+      }
+
+      return { ...res, payload: normalized };
+    }
+
+    return res;
+  } catch (e) {
+    console.warn("Failed to create list", e);
+    return { status: 500, error: e };
+  }
+};
+
+// Update an existing list
+export const updateList = async (formData, listID, setShoppingLists) => {
+  try {
+    const res = await apiUpdateList(formData, listID);
+    if (isSuccess(res) && res.payload && typeof setShoppingLists === "function") {
+      const normalized = { ...res.payload, id: getIdFromPayload(res.payload) };
+
+      setShoppingLists((prev) =>
+        (prev || []).map((l) => (String(l.id) === String(listID) ? { ...l, ...normalized } : l))
       );
     }
-
-    if (typeof setCurrentUser === "function") {
-      setCurrentUser((prev) => ({
-        ...prev,
-        createdLists: [...(prev.createdLists || []), newId],
-        memberLists: [...new Set([...(prev.memberLists || []), newId])],
-      }));
-    }
-
-    return { ...res, payload: normalized };
+    return res;
+  } catch (e) {
+    console.warn("Failed to update list", e);
+    return { status: 500, error: e };
   }
-  return res;
 };
 
-export const updateList = async (formData, listID, setShoppingLists) => {
-  const res = await apiUpdateList(formData, listID);
-  if (
-    res.status >= 200 &&
-    res.status < 300 &&
-    res.payload &&
-    typeof setShoppingLists === "function"
-  ) {
-    const normalized = { ...res.payload, id: res.payload.id };
-
-    setShoppingLists((prev) =>
-      (prev || []).map((l) => {
-        const lid = String(l.id );
-        const target = String(listID);
-        return lid === target ? { ...l, ...normalized } : l;
-      })
-    );
-  }
-  return res;
-};
-
+// Delete a list
 export const deleteList = async (
   listID,
   { setShoppingLists, setItems, setUsers, setCurrentUser } = {}
 ) => {
-  const res = await apiDeleteList(listID);
-  if (res.status >= 200 && res.status < 300) {
-    if (typeof setShoppingLists === "function")
-      setShoppingLists((prev) => (prev || []).filter((l) => !((l.id === listID) )));
+  try {
+    const res = await apiDeleteList(listID);
+    if (isSuccess(res)) {
+      if (typeof setShoppingLists === "function") {
+        setShoppingLists((prev) => (prev || []).filter((l) => String(l.id) !== String(listID)));
+      }
 
-    if (typeof setItems === "function")
-      setItems((prev) =>
-        (prev || []).filter(
-          (it) => !(it.listId === listID || it.listId === String(listID))
-        )
-      );
+      if (typeof setItems === "function") {
+        setItems((prev) => (prev || []).filter((it) => String(it.listId) !== String(listID)));
+      }
 
-    if (typeof setUsers === "function")
-      setUsers((prev) =>
-        (prev || []).map((u) => ({
-          ...u,
-          createdLists: (u.createdLists || []).filter(
-            (id) => id !== listID && id !== String(listID)
-          ),
-          memberLists: (u.memberLists || []).filter(
-            (id) => id !== listID && id !== String(listID)
-          ),
-        }))
-      );
+      if (typeof setUsers === "function") {
+        setUsers((prev) =>
+          (prev || []).map((u) => ({
+            ...u,
+            createdLists: (u.createdLists || []).filter((id) => String(id) !== String(listID)),
+            memberLists: (u.memberLists || []).filter((id) => String(id) !== String(listID)),
+          }))
+        );
+      }
 
-    if (typeof setCurrentUser === "function")
-      setCurrentUser((prev) => ({
-        ...prev,
-        createdLists: (prev.createdLists || []).filter(
-          (id) => id !== listID && id !== String(listID)
-        ),
-        memberLists: (prev.memberLists || []).filter(
-          (id) => id !== listID && id !== String(listID)
-        ),
-      }));
+      if (typeof setCurrentUser === "function") {
+        setCurrentUser((prev) => ({
+          ...prev,
+          createdLists: (prev.createdLists || []).filter((id) => String(id) !== String(listID)),
+          memberLists: (prev.memberLists || []).filter((id) => String(id) !== String(listID)),
+        }));
+      }
+    }
+    return res;
+  } catch (e) {
+    console.warn("Failed to delete list", e);
+    return { status: 500, error: e };
   }
-  return res;
 };

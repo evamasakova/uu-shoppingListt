@@ -1,6 +1,3 @@
-const port = import.meta.env.VITE_PORT || 3000;
-const baseUrl = `http://localhost:${port}`;
-
 const parseJsonSafe = async (res) => {
   try {
     return await res.json();
@@ -15,111 +12,77 @@ const makeResponse = (res, data) => ({
   errors: data?.errors ?? null,
 });
 
-/**
- * Fetch items for a shopping list.
- * Expects items to have a listId field (json-server query: /items?listId=...)
- * @param {number|string} listID
- */
-export const fetchItems = async (listID) => {
-  try {
-    // json-server style: /items?listId=123
-    const url = `${baseUrl}/items${
-      listID ? `?listId=${encodeURIComponent(listID)}` : ""
-    }`;
-    const req = await fetch(url, {
-      headers: { Accept: "application/json" },
-      method: "GET",
-    });
-
-    const data = await parseJsonSafe(req);
-    return makeResponse(req, data);
-  } catch (err) {
-    return { status: 0, payload: null, msg: null, errors: [err.message] };
-  }
+export const fetchItems = async (listId) => {
+  const url = listId ? `/items?listId=${encodeURIComponent(listId)}` : "/items";
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  const data = await parseJsonSafe(res);
+  return makeResponse(res, data);
 };
 
-/**
- * Create a new item.
- * formData should include at least { name, listId } (json-server /items)
- * @param {object} formData
- */
 export const createItem = async (formData) => {
-  try {
-    const req = await fetch(`${baseUrl}/items`, {
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-      body: JSON.stringify(formData),
-    });
-    const data = await parseJsonSafe(req);
-    return makeResponse(req, data);
-  } catch (err) {
-    return { status: 0, payload: null, msg: null, errors: [err.message] };
-  }
+  const res = await fetch("/items", {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify(formData),
+  });
+  const data = await parseJsonSafe(res);
+  return makeResponse(res, data);
 };
 
-/**
- * Delete an item by ID
- * @param {number|string} itemID
- */
-export const deleteItem = async (itemID) => {
-  try {
-    const req = await fetch(
-      `${baseUrl}/items/${encodeURIComponent(itemID)}`,
-      {
-        headers: { Accept: "application/json" },
-        method: "DELETE",
-      }
+export const updateItem = async (formData, itemId) => {
+  const res = await fetch(`/items/${itemId}`, {
+    method: "PATCH",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify(formData),
+  });
+  const data = await parseJsonSafe(res);
+  return makeResponse(res, data);
+};
+
+export const deleteItem = async (itemId) => {
+  const res = await fetch(`/items/${itemId}`, {
+    method: "DELETE",
+    headers: { Accept: "application/json" },
+  });
+  const data = await parseJsonSafe(res);
+  return makeResponse(res, data);
+};
+// Check an item
+export const checkItem = async (itemId, { setItems } = {}) => {
+  const res = await updateItem({ checked: true }, itemId);
+  if (
+    res.status >= 200 &&
+    res.status < 300 &&
+    res.payload &&
+    typeof setItems === "function"
+  ) {
+    setItems((prev) =>
+      (prev || []).map((it) =>
+        String(it.id) === String(itemId)
+          ? { ...it, checked: true, ...res.payload }
+          : it
+      )
     );
-    const data = await parseJsonSafe(req);
-    return makeResponse(req, data);
-  } catch (err) {
-    return { status: 0, payload: null, msg: null, errors: [err.message] };
   }
+  return res;
 };
 
-/**
- * Update an item by ID
- * @param {object} formData - The data to update
- * @param {number|string} itemID - The ID of the item to update
- */
-export const updateItem = async (formData, itemID) => {
-  try {
-    const req = await fetch(
-      `${baseUrl}/items/${encodeURIComponent(itemID)}`,
-      {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        method: "PATCH",
-        body: JSON.stringify(formData),
-      }
+// Uncheck an item
+export const uncheckItem = async (itemId, { setItems } = {}) => {
+  const res = await updateItem({ checked: false }, itemId);
+  if (
+    res.status >= 200 &&
+    res.status < 300 &&
+    res.payload &&
+    typeof setItems === "function"
+  ) {
+    setItems((prev) =>
+      (prev || []).map((it) =>
+        String(it.id) === String(itemId)
+          ? { ...it, checked: false, ...res.payload }
+          : it
+      )
     );
-    const data = await parseJsonSafe(req);
-    return makeResponse(req, data);
-  } catch (err) {
-    return { status: 0, payload: null, msg: null, errors: [err.message] };
   }
+  return res;
 };
-
-/**
- * Set checked = true for an item
- * @param {number|string} itemID
- */
-export const checkItem = async (itemID) =>
-  updateItem(
-    { checked: true, updatedAt: new Date().toISOString() },
-    itemID
-  );
-/**
- * Set checked = false for an item
- * @param {number|string} itemID
- */
-export const uncheckItem = async (itemID) =>
-  updateItem(
-    { checked: false, updatedAt: new Date().toISOString() },
-    itemID
-  );

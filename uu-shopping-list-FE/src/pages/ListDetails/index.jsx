@@ -15,8 +15,8 @@ import {
   uncheckItem as uncheckItemService,
 } from "../../context/itemsService";
 import {
-  fetchMembers as fetchMembersService,
-  inviteMember as inviteMemberService,
+  fetchMembersService,
+  inviteMemberService,
   leaveList as leaveListService,
   removeMember as removeMemberService,
 } from "../../context/usersService";
@@ -32,6 +32,9 @@ export default function ListDetails() {
     setItems,
     currentUser,
   } = useContext(DataContext);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUserName, setSelectedUserName] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const navigate = useNavigate();
 
@@ -45,6 +48,29 @@ export default function ListDetails() {
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [isSubmittingItem, setIsSubmittingItem] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetchMembersService(listId, setMembers);
+      if (
+        res?.status >= 200 &&
+        res?.status < 300 &&
+        Array.isArray(res.payload)
+      ) {
+        const membersData = res.payload;
+        setMembers(membersData);
+
+        // Add any missing users to users array
+        setUsers((prevUsers) => {
+          const newUsers = membersData
+            .map((m) => m.user) // assumes m.user exists with {id, username}
+            .filter(Boolean)
+            .filter((u) => !prevUsers?.some((pu) => pu.id === u.id));
+          return [...(prevUsers || []), ...newUsers];
+        });
+      }
+    })();
+  }, [listId]);
 
   useEffect(() => {
     (async () => {
@@ -129,24 +155,23 @@ export default function ListDetails() {
   };
 
   const handleAddMember = async () => {
-    if (!isCreator) return;
-    if (!newMemberEmail?.trim()) return alert("Enter member name/email.");
+    if (!selectedUser || !list) {
+      console.warn("Missing user or list id");
+      return;
+    }
 
     const formData = {
-      name: newMemberEmail.trim(),
-      listId: list.id,
+      name: selectedUser.username,
+      userId: selectedUser.id,
     };
-    const res = await inviteMemberService(formData, { setMembers, setUsers });
-    if (res?.status >= 200 && res?.status < 300 && res.payload) {
-      const memberRecord = res.payload;
-      setShoppingLists((prev) =>
-        prev.map((l) =>
-          l.id === list.id
-            ? { ...l, members: [...(l.members || []), memberRecord] }
-            : l
-        )
-      );
-      setNewMemberEmail("");
+
+    const res = await inviteMemberService(list.id, formData);
+
+    if (res.status >= 200 && res.status < 300) {
+      console.log("Member added:", res.payload);
+      setMembers((prev) => [res.payload, ...(prev || [])]);
+      setSelectedUserId("");
+      setSelectedUser(null);
     } else {
       console.warn("Failed to invite member", res);
     }
@@ -160,8 +185,12 @@ export default function ListDetails() {
 
     if (!memberRecordId && memberUserId) {
       const candidate =
-        (members || []).find((m) => String(m.userId) === String(memberUserId)) ||
-        (list?.members || []).find((m) => String(m.userId) === String(memberUserId));
+        (members || []).find(
+          (m) => String(m.userId) === String(memberUserId)
+        ) ||
+        (list?.members || []).find(
+          (m) => String(m.userId) === String(memberUserId)
+        );
       if (candidate && candidate.id) {
         memberRecordId = candidate.id;
       }
@@ -184,13 +213,20 @@ export default function ListDetails() {
 
       if (res?.status >= 200 && res?.status < 300) {
         if (typeof setMembers === "function") {
-          setMembers((prev) => (prev || []).filter((m) => String(m.id) !== String(memberRecordId)));
+          setMembers((prev) =>
+            (prev || []).filter((m) => String(m.id) !== String(memberRecordId))
+          );
         }
         if (typeof setShoppingLists === "function") {
           setShoppingLists((prev) =>
             (prev || []).map((l) =>
               l.id === list.id
-                ? { ...l, members: (l.members || []).filter((m) => String(m.id) !== String(memberRecordId)) }
+                ? {
+                    ...l,
+                    members: (l.members || []).filter(
+                      (m) => String(m.id) !== String(memberRecordId)
+                    ),
+                  }
                 : l
             )
           );
@@ -198,12 +234,26 @@ export default function ListDetails() {
         if (typeof setUsers === "function" && memberUserId) {
           setUsers((prev) =>
             (prev || []).map((u) =>
-              u.id === memberUserId ? { ...u, memberLists: (u.memberLists || []).filter((id) => id !== list.id) } : u
+              u.id === memberUserId
+                ? {
+                    ...u,
+                    memberLists: (u.memberLists || []).filter(
+                      (id) => id !== list.id
+                    ),
+                  }
+                : u
             )
           );
         }
         setList((prev) =>
-          prev ? { ...prev, members: (prev.members || []).filter((m) => String(m.id) !== String(memberRecordId)) } : prev
+          prev
+            ? {
+                ...prev,
+                members: (prev.members || []).filter(
+                  (m) => String(m.id) !== String(memberRecordId)
+                ),
+              }
+            : prev
         );
         return;
       } else {
@@ -231,19 +281,31 @@ export default function ListDetails() {
         }
         if (typeof setShoppingLists === "function") {
           setShoppingLists((prev) =>
-            (prev || []).map((l) => (l.id === list.id ? { ...l, members: updatedMembers } : l))
+            (prev || []).map((l) =>
+              l.id === list.id ? { ...l, members: updatedMembers } : l
+            )
           );
         }
         if (typeof setUsers === "function") {
           setUsers((prev) =>
             (prev || []).map((u) =>
-              u.id === memberUserId ? { ...u, memberLists: (u.memberLists || []).filter((id) => id !== list.id) } : u
+              u.id === memberUserId
+                ? {
+                    ...u,
+                    memberLists: (u.memberLists || []).filter(
+                      (id) => id !== list.id
+                    ),
+                  }
+                : u
             )
           );
         }
         setList((prev) => (prev ? { ...prev, members: updatedMembers } : prev));
       } else {
-        console.warn("Failed to remove member by userId via list PATCH", patchRes);
+        console.warn(
+          "Failed to remove member by userId via list PATCH",
+          patchRes
+        );
         alert("Nepodařilo se odstranit člena. Zkontrolujte síťové volání.");
       }
     } catch (err) {
@@ -418,34 +480,37 @@ export default function ListDetails() {
                 Members
               </h3>
               <ul className="space-y-2 mb-3">
-                {(members || list.members || []).map((m) => {
-                  // show only username (from users[]). if missing, show "Unknown"
-                  const userRecord = (users || []).find((u) => u.id === m.userId);
+                {(members || []).map((m, index) => {
+                  // Find corresponding user
+                  const userRecord = (users || []).find(
+                    (u) => u.id === m.userId
+                  );
                   const memberName = userRecord?.username ?? "Unknown";
-                  if (memberName === "Unknown") {
-                    // helpful debug while developing — remove when stable
-                    // console.debug("Member missing name/user record:", m);
-                  }
-                   const memberUserId = m.userId ?? null;
-                   const isOwner =
-                     memberUserId &&
-                     (memberUserId === list.creatorId ||
-                       memberUserId === userId);
-                   return (
-                     <li
-                       key={m.id}
-                       className="flex justify-between items-center bg-white border border-gray-200 rounded-md px-3 py-2"
-                     >
-                       <span>
-                         <span className="font-medium text-gray-800">
-                           {memberName}
-                         </span>{" "}
-                         {isOwner && (
-                           <span className="text-sm text-pink-600 font-semibold">
-                             (Owner)
-                           </span>
-                         )}
-                       </span>
+
+                  const memberUserId = m.userId ?? null;
+                  const isOwner =
+                    memberUserId &&
+                    (memberUserId === list.creatorId ||
+                      memberUserId === userId);
+
+                  // Use fallback for key: m.id -> m.userId -> index
+                  const key = m.id ?? m.userId ?? index;
+
+                  return (
+                    <li
+                      key={key}
+                      className="flex justify-between items-center bg-white border border-gray-200 rounded-md px-3 py-2"
+                    >
+                      <span>
+                        <span className="font-medium text-gray-800">
+                          {memberName}
+                        </span>{" "}
+                        {isOwner && (
+                          <span className="text-sm text-pink-600 font-semibold">
+                            (Owner)
+                          </span>
+                        )}
+                      </span>
                       {!isOwner && (
                         <button
                           onClick={() => handleRemoveMember(m.id, memberUserId)}
@@ -461,13 +526,28 @@ export default function ListDetails() {
 
               {/* Add member input */}
               <div className="flex space-x-2">
-                <input
-                  type="text"
-                  placeholder="User name / email"
-                  value={newMemberEmail}
-                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => {
+                    const userId = e.target.value;
+                    const user = users.find((u) => u.id === userId);
+                    setSelectedUser(user);
+                    setSelectedUserId(userId);
+                  }}
                   className="border border-gray-300 flex-1 px-3 py-2 rounded-md focus:ring-2 focus:ring-indigo-400 outline-none"
-                />
+                >
+                  <option value="">Select a user</option>
+                  {users
+                    .filter(
+                      (u) => !(members || []).some((m) => m.userId === u.id)
+                    )
+                    .map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.username}
+                      </option>
+                    ))}
+                </select>
+
                 <button
                   onClick={handleAddMember}
                   className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"

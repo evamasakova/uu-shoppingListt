@@ -60,11 +60,13 @@ class ListDAO {
     try {
       const updatedList = await List.findByIdAndUpdate(listId, data, {
         new: true,
+        runValidators: true,
       });
 
       return updatedList;
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      throw error; 
     }
   }
 

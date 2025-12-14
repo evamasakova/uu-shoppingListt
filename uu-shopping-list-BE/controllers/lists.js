@@ -1,11 +1,13 @@
 //todo add controlers
 const ListDAO = require("../dao/lists.dao");
 
-exports.createListHandler = (req, res, next) => {
+exports.createListHandler = async (req, res, next) => {
   try {
-    new ListDAO().createList(req.body, req.user.id);
+    const data = await new ListDAO().createList(req.body, req.user.id);
+    console.log(data);
     res.status(200).send({
       msg: `created list!`,
+      payload: data,
     });
   } catch (err) {
     console.error(err);
@@ -64,10 +66,20 @@ exports.deleteListHandler = (req, res, next) => {
 };
 exports.updateListHandler = async (req, res, next) => {
   try {
-    const data = await new ListDAO().updateList(req.body, req.params.id);
-    res.status(200).send({
-      msg: `List updated`,
-      payload: data,
+    const listId = req.params.id;
+    const updateData = { ...req.body };
+
+    delete updateData.creatorId;
+
+    const updatedList = await new ListDAO().updateList(updateData, listId);
+
+    if (!updatedList) {
+      return res.status(404).json({ msg: "List not found" });
+    }
+
+    res.status(200).json({
+      msg: "List updated",
+      payload: updatedList,
     });
   } catch (err) {
     console.error(err);

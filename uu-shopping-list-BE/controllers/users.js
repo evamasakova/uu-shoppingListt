@@ -47,7 +47,7 @@ exports.loginUserHandler = async (req, res, next) => {
       res.locals.email = email;
       next();
     } else {
-      return res.status(404).send({ msg: "Wrong password or email!" });
+      return res.status(401).send({ msg: "Wrong password or email!" });
     }
   } catch (error) {
     console.log(error);
