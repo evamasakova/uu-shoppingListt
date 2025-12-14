@@ -30,7 +30,7 @@ describe("ShoppingList endpoints", function () {
     token = loginRes.body.accessToken;
   });
 
-  // ================= Happy path =================
+  // Happy day
   it("provides a data list (GET /v1/lists/all)", async function () {
     const res = await request(app)
       .get("/v1/lists/all")
@@ -96,7 +96,7 @@ describe("ShoppingList endpoints", function () {
     expect(res.body).to.have.property("msg", "List deleted");
   });
 
-  // =============== Alternative / edge cases =================
+  // Alternative 
   it("fails to get a non-existing list", async function () {
     const res = await request(app)
       .get("/v1/lists/find/000000000000000000000000")
@@ -122,7 +122,7 @@ describe("ShoppingList endpoints", function () {
   it("fails to create a list with invalid data", async function () {
     const payload = {
       archived: false,
-      name: "", // name required, empty string invalid
+      name: "", 
       description: "desc",
     };
     const res = await request(app)
@@ -130,7 +130,7 @@ describe("ShoppingList endpoints", function () {
       .set("Authorization", `Bearer ${token}`)
       .send(payload);
 
-    expect(res.status).to.equal(400); // depending on your validation
+    expect(res.status).to.equal(400); 
   });
 
   it("fails to access endpoints without token", async function () {
