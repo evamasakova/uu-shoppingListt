@@ -1,0 +1,39 @@
+{
+  "header": {
+    "title": "🛒 ShoppingListApp",
+    "loggedInAs": "Angemeldet als:"
+  },
+  "dashboard": {
+    "title": "Einkaufslisten",
+    "showArchived": "Archivierte anzeigen",
+    "newList": "Neue Liste",
+    "itemsLabel": "Artikel",
+    "active": "Aktiv",
+    "archived": "Archiviert",
+    "archive": "Archivieren",
+    "delete": "Löschen",
+    "noLists": "Keine Listen"
+  },
+  "modal": {
+    "createTitle": "Neue Einkaufsliste erstellen",
+    "nameLabel": "Name",
+    "placeholderName": "z. B. Wocheneinkauf",
+    "create": "Erstellen",
+    "cancel": "Abbrechen"
+  },
+  "confirm": {
+    "delete": "Soll diese Liste wirklich gelöscht werden?",
+    "archive": "Soll diese Liste wirklich archiviert werden?"
+  },
+  "filters": {
+    "all": "Alle",
+    "checked": "Markiert",
+    "unchecked": "Unmarkiert"
+  },
+  "items": {
+    "none": "Keine Artikel gefunden",
+    "checkedLabel": "markiert",
+    "uncheckedLabel": "unmarkiert",
+    "total": "Insgesamt"
+  }
+}

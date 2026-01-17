@@ -1,0 +1,39 @@
+{
+  "header": {
+    "title": "🛒 ShoppingListApp",
+    "loggedInAs": "Přihlášen jako:"
+  },
+  "dashboard": {
+    "title": "Nákupní seznamy",
+    "showArchived": "Zobrazit archivované",
+    "newList": "Nový seznam",
+    "itemsLabel": "Položky",
+    "active": "Aktivní",
+    "archived": "Archivovaný",
+    "archive": "Archivovat",
+    "delete": "Smazat",
+    "noLists": "Žádné seznamy"
+  },
+  "modal": {
+    "createTitle": "Vytvořit nový seznam",
+    "nameLabel": "Název",
+    "placeholderName": "Např. Týdenní nákup",
+    "create": "Vytvořit",
+    "cancel": "Zrušit"
+  },
+  "confirm": {
+    "delete": "Opravdu smazat tento seznam?",
+    "archive": "Opravdu archivovat tento seznam?"
+  },
+  "filters": {
+    "all": "Vše",
+    "checked": "Zaškrtnuté",
+    "unchecked": "Nezaškrtnuté"
+  },
+  "items": {
+    "none": "Žádné položky nalezeny",
+    "checkedLabel": "označeno",
+    "uncheckedLabel": "neoznačeno",
+    "total": "Celkem"
+  }
+}
