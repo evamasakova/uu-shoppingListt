@@ -115,6 +115,9 @@ export default function ListDetails() {
     (i) => String(i.listId) === String(list.id)
   );
 
+  const checkedCount = listItems.filter((i) => i.checked).length;
+  const uncheckedCount = listItems.length - checkedCount;
+
   const filteredItems = listItems.filter((item) => {
     if (filter === "all") return true;
     if (filter === "checked") return item.checked;
@@ -430,6 +433,68 @@ export default function ListDetails() {
     }
   };
 
+  /* Small inline PieChart component (SVG donut) */
+  function PieChart({ checked = 0, unchecked = 0, size = 120, stroke = 14 }) {
+    const total = checked + unchecked;
+    const radius = (size - stroke) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const percent = total === 0 ? 0 : checked / total;
+    const dashOffset = circumference * (1 - percent);
+
+    // Colors matching page palette
+    const checkedColor = "#6366F1"; // indigo-500
+    const uncheckedColor = "#E5E7EB"; // gray-200
+
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <g transform={`translate(${size / 2}, ${size / 2})`}>
+          {/* background circle (full) */}
+          <circle
+            r={radius}
+            cx="0"
+            cy="0"
+            fill="transparent"
+            stroke={uncheckedColor}
+            strokeWidth={stroke}
+          />
+          {/* foreground circle (checked portion) */}
+          <circle
+            r={radius}
+            cx="0"
+            cy="0"
+            fill="transparent"
+            stroke={checkedColor}
+            strokeWidth={stroke}
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            strokeLinecap="round"
+            transform="rotate(-90)"
+          />
+          {/* center label */}
+          <text
+            x="0"
+            y="2"
+            textAnchor="middle"
+            fontSize={14}
+            fontWeight="700"
+            fill="#374151" /* gray-700 */
+          >
+            {total === 0 ? "0" : `${Math.round(percent * 100)}%`}
+          </text>
+          <text
+            x="0"
+            y="20"
+            textAnchor="middle"
+            fontSize={11}
+            fill="#6B7280" /* gray-500 */
+          >
+            checked
+          </text>
+        </g>
+      </svg>
+    );
+  }
+
   return (
     <>
       {/* Back Button */}
@@ -573,6 +638,23 @@ export default function ListDetails() {
                 {f.charAt(0).toUpperCase() + f.slice(1)}
               </button>
             ))}
+          </div>
+
+          {/* Checked vs Unchecked - Pie chart */}
+          <div className="p-6 flex items-center gap-6 border-b bg-white">
+            <PieChart checked={checkedCount} unchecked={uncheckedCount} size={110} />
+            <div className="space-y-1">
+              <div className="text-sm text-gray-600">
+                <span className="font-medium text-indigo-600">{checkedCount}</span>{" "}
+                checked
+              </div>
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">{uncheckedCount}</span> unchecked
+              </div>
+              <div className="text-xs text-gray-400 mt-2">
+                Total: <span className="font-semibold">{checkedCount + uncheckedCount}</span>
+              </div>
+            </div>
           </div>
 
           {/* Items List */}
