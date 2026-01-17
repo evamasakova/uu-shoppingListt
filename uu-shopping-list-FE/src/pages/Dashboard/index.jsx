@@ -133,14 +133,24 @@ export default function Dashboard() {
           <Link key={list.id} to={`/list/${list.id}`} className="group">
             <article className="bg-white border border-transparent hover:border-indigo-100 rounded-xl p-4 shadow-md hover:shadow-lg transition transform hover:-translate-y-1 h-full flex flex-col justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-800 group-hover:text-indigo-600">
-                  {list.name}
-                </h2>
-                {list.description && (
-                  <p className="text-sm text-gray-500 mt-2 line-clamp-3">
-                    {list.description}
-                  </p>
-                )}
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-800 group-hover:text-indigo-600">
+                      {list.name}
+                    </h2>
+                    {list.description && (
+                      <p className="text-sm text-gray-500 mt-2 line-clamp-3">
+                        {list.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs text-gray-500">Items</span>
+                    <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium">
+                      {(Array.isArray(list.items) && list.items.length) || 0}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <div className="mt-4 flex items-center justify-between">
